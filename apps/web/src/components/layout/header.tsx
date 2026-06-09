@@ -19,6 +19,8 @@ import { CommandPalette } from "./command-palette";
 
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",
+  "/studio": "Studio",
+  "/gallery": "Gallery",
   "/upload": "Upload",
   "/files": "Files",
   "/settings": "Settings",
@@ -28,7 +30,9 @@ const pageTitles: Record<string, string> = {
 export function Header() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const pageTitle = pageTitles[pathname] || "Page";
+  const pageTitle =
+    pageTitles[pathname] ||
+    (pathname.startsWith("/gallery/") ? "Subject" : "Page");
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   // Global keyboard shortcut — cmd/ctrl-K or `/` toggles the palette.
