@@ -14,6 +14,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { APP_NAME } from "@/lib/utils";
 import { CommandPalette } from "./command-palette";
 
 const pageTitles: Record<string, string> = {
@@ -57,7 +58,7 @@ export function Header() {
               href="/"
               className="text-nav-foreground/80 hover:text-nav-foreground font-medium"
             >
-              oss-starter-kit
+              {APP_NAME}
             </BreadcrumbLink>
           </BreadcrumbItem>
           {pathname !== "/" && (

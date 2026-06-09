@@ -3,8 +3,10 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # --- Backblaze B2 (S3-compatible) ---
-    b2_endpoint: str = "https://s3.us-west-004.backblazeb2.com"
-    b2_region: str = "us-west-004"
+    # All B2 settings default to empty so an unconfigured user fails loud at
+    # the main.py startup guard rather than silently inheriting a region.
+    b2_endpoint: str = ""
+    b2_region: str = ""
     b2_application_key_id: str = ""
     b2_application_key: str = ""
     b2_bucket_name: str = ""

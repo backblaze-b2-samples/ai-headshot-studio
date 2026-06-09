@@ -92,6 +92,8 @@ No DB, no in-memory job store.
 |------|-------------|
 | No backward imports | `tests/test_structure.py::test_no_backward_imports` |
 | No boto3 outside repo/ | `tests/test_structure.py::test_boto3_only_in_repo` |
+| ML SDKs (torch/diffusers/transformers/peft/accelerate/replicate/anthropic) only in repo/ | `tests/test_structure.py::test_ml_sdks_only_in_repo` |
+| ML SDKs imported lazily (never at module top level) | `tests/test_structure.py::test_ml_sdks_lazy_in_repo` |
 | File size < 300 lines | `tests/test_structure.py::test_file_size_limits` |
 | All layers exist | `tests/test_structure.py::test_all_layers_exist` |
 | No bare print() | `ruff` rule T20 |

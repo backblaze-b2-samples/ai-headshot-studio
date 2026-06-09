@@ -1,6 +1,10 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+// Single source of truth for the product name. Used by the sidebar brand and
+// the header breadcrumb root so they can never drift out of sync.
+export const APP_NAME = "AI Headshot Studio";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }

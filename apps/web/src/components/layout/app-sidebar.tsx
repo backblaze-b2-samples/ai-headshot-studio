@@ -23,6 +23,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { APP_NAME } from "@/lib/utils";
 
 const navItems = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -48,7 +49,7 @@ export function AppSidebar() {
           <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-foreground text-background font-display font-bold text-[13px]">
             B2
           </div>
-          <span>AI Headshot Studio</span>
+          <span>{APP_NAME}</span>
         </Link>
       </SidebarHeader>
 
