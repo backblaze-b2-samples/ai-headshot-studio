@@ -18,6 +18,24 @@ at-scale* AI loop, plus a clean **face-data privacy lifecycle**.
 - A headshot **Dashboard** — subjects, headshots generated, models trained, B2 storage by artifact type
 - The reusable B2 scaffolding: full-bucket file browser, drag-and-drop upload, FastAPI layered backend, structural tests
 
+## What it looks like
+
+**Dashboard** — subjects, headshots generated, models trained, a B2 storage-by-artifact chart, and recent subjects.
+
+![Dashboard with headshot metrics and B2 storage breakdown](docs/images/dashboard.png)
+
+**Studio** — the guided flow for one subject: upload selfies, auto-caption, train a likeness LoRA, then pick style packs and generate.
+
+![Studio guided flow with captioned selfies and style packs](docs/images/studio.png)
+
+**Gallery** — every subject scoped to the `subjects/` prefix on B2, each card showing selfie and headshot counts.
+
+![Gallery of headshot subjects](docs/images/gallery.png)
+
+**Subject headshots** — a subject's generated headshots grouped by style pack, with download and a one-click delete-subject purge.
+
+![Subject headshots grouped by style pack](docs/images/gallery-subject.png)
+
 ## Real by default — never simulated
 
 The core capability (train a likeness LoRA → generate headshots) is **genuinely
