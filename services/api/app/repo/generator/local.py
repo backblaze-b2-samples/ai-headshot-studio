@@ -35,10 +35,11 @@ def _pick_device():
 class LocalGenerator(Generator):
     name = "local"
 
-    def __init__(self, base_model: str, steps: int, guidance: float):
+    def __init__(self, base_model: str, steps: int, guidance: float, lora_scale: float):
         self.base_model = base_model
         self.steps = steps
         self.guidance = guidance
+        self.lora_scale = lora_scale
         self._pipe = None
         self._loaded_lora: str | None = None
 
@@ -46,7 +47,7 @@ class LocalGenerator(Generator):
         if self._pipe is not None and self._loaded_lora == lora_key:
             return self._pipe
         import torch
-        from diffusers import StableDiffusionPipeline
+        from diffusers import DPMSolverMultistepScheduler, StableDiffusionPipeline
 
         device = _pick_device()
         pipe = StableDiffusionPipeline.from_pretrained(
@@ -54,6 +55,13 @@ class LocalGenerator(Generator):
             safety_checker=None,
             torch_dtype=torch.float32,
         ).to(device)
+        # DPM++ 2M Karras renders noticeably sharper, cleaner faces than the
+        # SD-1.5 default sampler at the same step count.
+        pipe.scheduler = DPMSolverMultistepScheduler.from_config(
+            pipe.scheduler.config,
+            use_karras_sigmas=True,
+            algorithm_type="dpmsolver++",
+        )
 
         data = get_bytes(lora_key)
         if data is None:
@@ -87,6 +95,7 @@ class LocalGenerator(Generator):
                 negative_prompt=req.negative_prompt,
                 num_inference_steps=req.steps,
                 guidance_scale=req.guidance,
+                cross_attention_kwargs={"scale": self.lora_scale},
                 generator=generator,
             ).images[0]
             buf = io.BytesIO()

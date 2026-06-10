@@ -38,6 +38,7 @@ def get_generator() -> Generator:
             base_model=settings.base_model,
             steps=settings.generate_steps,
             guidance=settings.generate_guidance,
+            lora_scale=settings.generate_lora_scale,
         )
     raise RuntimeError(
         f"Unknown GENERATOR_PROVIDER '{settings.generator_provider}'. "

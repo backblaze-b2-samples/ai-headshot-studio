@@ -13,6 +13,8 @@ class StylePack(BaseModel):
     description: str
     prompt_template: str
     negative_prompt: str = (
-        "blurry, low quality, deformed, disfigured, extra limbs, watermark, "
+        "blurry, low quality, lowres, deformed, disfigured, bad anatomy, "
+        "extra limbs, extra fingers, mutated hands, cropped, worst quality, "
+        "jpeg artifacts, plastic skin, oversaturated, closed eyes, watermark, "
         "text, cartoon, 3d render"
     )
