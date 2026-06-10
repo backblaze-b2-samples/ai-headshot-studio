@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Sparkles, Wand2, Images, Loader2 } from "lucide-react";
 
@@ -9,7 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SelfieStep } from "@/components/studio/selfie-step";
+import { CaptionList } from "@/components/studio/caption-list";
 import { StylePicker } from "@/components/studio/style-picker";
 import { SubjectStatusBadge } from "@/components/studio/status-badge";
 import {
@@ -17,7 +19,6 @@ import {
   useCreateSubject,
   useGenerateHeadshots,
   useSubject,
-  useSubjectProgress,
   useTrainSubject,
 } from "@/lib/queries";
 import type { Subject } from "@ai-headshot-studio/shared";
@@ -48,8 +49,14 @@ function StepCard({
 
 export function StudioFlow() {
   const router = useRouter();
+  // Deep-link support: /studio?subjectId=… loads an existing subject straight
+  // into the flow (e.g. "Generate more" from a trained subject's gallery)
+  // instead of forcing the user to define a brand-new subject.
+  const searchParams = useSearchParams();
   const [name, setName] = useState("");
-  const [subjectId, setSubjectId] = useState<string | null>(null);
+  const [subjectId, setSubjectId] = useState<string | null>(
+    () => searchParams.get("subjectId"),
+  );
   const [styles, setStyles] = useState<string[]>([]);
 
   const createSubject = useCreateSubject();
@@ -57,10 +64,9 @@ export function StudioFlow() {
   const train = useTrainSubject();
   const generate = useGenerateHeadshots();
 
+  // useSubject self-polls while a job runs, so the UI tracks the
+  // training → trained → complete transitions and the progress counters live.
   const { data: subject } = useSubject(subjectId ?? undefined);
-  // Poll progress whenever a subject exists; the hook self-throttles to only
-  // poll while a job is actually running.
-  useSubjectProgress(subjectId ?? undefined, !!subjectId);
 
   const s: Subject | undefined = subject;
   const busy =
@@ -90,8 +96,8 @@ export function StudioFlow() {
     ? Math.round((s.headshots_done / s.headshots_total) * 100)
     : 0;
 
-  // --- Step 1: name the subject ---
-  if (!subjectId || !s) {
+  // --- Step 1: name the subject (only when there is no subject at all) ---
+  if (!subjectId) {
     return (
       <StepCard index={1} title="Name your subject">
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -113,6 +119,11 @@ export function StudioFlow() {
         </div>
       </StepCard>
     );
+  }
+
+  // A subject is selected (just created or deep-linked) but not loaded yet.
+  if (!s) {
+    return <Skeleton className="h-64 w-full" />;
   }
 
   const canCaption = s.selfies.length >= 4;
@@ -180,6 +191,7 @@ export function StudioFlow() {
               </p>
             </div>
           )}
+          <CaptionList selfies={s.selfies} />
           {s.error && <p className="text-xs text-destructive">{s.error}</p>}
         </div>
       </StepCard>

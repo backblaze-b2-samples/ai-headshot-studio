@@ -107,11 +107,23 @@ export function useSubjects() {
   return useQuery({ queryKey: qk.subjects(), queryFn: getSubjects });
 }
 
+/**
+ * Fetches the full subject manifest and — crucially — keeps it live while a
+ * background job (captioning / training / generating) is running by polling
+ * every 1.5s, stopping the moment the status settles. The manifest on B2 is
+ * the single source of truth, so this is what lets the Studio and Gallery
+ * reflect "training → trained → complete" transitions and the step/headshot
+ * progress counters without a manual refresh.
+ */
 export function useSubject(id: string | undefined) {
   return useQuery({
     queryKey: qk.subject(id ?? ""),
     queryFn: () => getSubject(id as string),
     enabled: !!id,
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status && ACTIVE_STATUSES.includes(status) ? 1500 : false;
+    },
   });
 }
 

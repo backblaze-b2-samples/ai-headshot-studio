@@ -12,16 +12,12 @@ import { Button } from "@/components/ui/button";
 import { SubjectStatusBadge } from "@/components/studio/status-badge";
 import { StyleSection } from "@/components/gallery/style-section";
 import { PurgeDialog } from "@/components/gallery/purge-dialog";
-import {
-  useSubject,
-  useSubjectGallery,
-  useSubjectProgress,
-} from "@/lib/queries";
+import { useSubject, useSubjectGallery } from "@/lib/queries";
 
 export function SubjectDetail({ subjectId }: { subjectId: string }) {
+  // useSubject self-polls while a job runs, so training/generation progress
+  // and the status badge update live without a manual refresh.
   const { data: subject, isLoading, error, refetch } = useSubject(subjectId);
-  // Live progress while a job runs; also refreshes the subject + gallery.
-  useSubjectProgress(subjectId, true);
   const { data: sections = [] } = useSubjectGallery(subjectId);
 
   if (isLoading) return <Skeleton className="h-64 w-full" />;
@@ -66,7 +62,7 @@ export function SubjectDetail({ subjectId }: { subjectId: string }) {
           </div>
           <div className="flex gap-2">
             <Button asChild variant="outline" size="sm">
-              <Link href="/studio">Generate more</Link>
+              <Link href={`/studio?subjectId=${subject.id}`}>Generate more</Link>
             </Button>
             <PurgeDialog subjectId={subject.id} subjectName={subject.name} />
           </div>

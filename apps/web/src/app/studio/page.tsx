@@ -1,3 +1,6 @@
+import { Suspense } from "react";
+
+import { Skeleton } from "@/components/ui/skeleton";
 import { StudioFlow } from "@/components/studio/studio-flow";
 
 export default function StudioPage() {
@@ -11,7 +14,11 @@ export default function StudioPage() {
         </p>
       </div>
       <div className="animate-fade-in-up stagger-2">
-        <StudioFlow />
+        {/* StudioFlow reads ?subjectId= via useSearchParams, which the App
+            Router requires to sit inside a Suspense boundary. */}
+        <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+          <StudioFlow />
+        </Suspense>
       </div>
     </div>
   );
