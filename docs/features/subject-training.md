@@ -27,7 +27,8 @@ be generated in their image — really fine-tuned, never simulated.
 - Subject name: string (UI)
 - 4–20 selfies: JPEG/PNG/WebP (multipart)
 - Engine: `TRAINER_PROVIDER` (`local` default | `replicate`)
-- Hyperparameters: `TRAIN_STEPS`, `TRAIN_RESOLUTION`, `TRAIN_LORA_RANK`, `TRAIN_LEARNING_RATE`
+- Hyperparameters: `TRAIN_RESOLUTION`, `TRAIN_LORA_RANK` (default 16), `TRAIN_LEARNING_RATE`
+- Step budget: scales with selfie count — `TRAIN_STEPS_PER_IMAGE` (default 100) × selfies, clamped to `[TRAIN_STEPS_MIN, TRAIN_STEPS_MAX]` (defaults 600–1200). Set `TRAIN_STEPS` > 0 to pin an explicit budget (e.g. `TRAIN_STEPS=40` for a fast smoke test); `0` (default) = auto. Resolved by `service.training.effective_train_steps`.
 
 ## Outputs
 - A real `.safetensors` LoRA at `subjects/{id}/model/{id}.safetensors`
@@ -36,11 +37,14 @@ be generated in their image — really fine-tuned, never simulated.
 
 ## Flow
 - Create subject → manifest written; selfies uploaded under the subject prefix
-- Auto-caption (Claude if `ANTHROPIC_API_KEY` set, else template)
+- Auto-caption (Claude if `ANTHROPIC_API_KEY` set, else template); the Studio
+  shows each selfie next to its caption so the user can sanity-check it
 - `POST /train` flips status to `training` and schedules the BackgroundTask
-- The trainer encodes selfies to latents, injects LoRA layers on the UNet, and
-  runs a real diffusion training loop, writing the LoRA to B2
+- The trainer center-crops each selfie to a square (no aspect distortion),
+  encodes to latents, injects rank-16 LoRA layers on the UNet, and runs a real
+  diffusion training loop on a cosine LR schedule (5% warmup), writing the LoRA to B2
 - Progress callback writes whole-percent updates into the manifest; the UI polls
+  the subject manifest live and unblocks "Generate" when status reaches `trained`
 
 ## Edge Cases
 - Fewer than `MIN_SELFIES` (default 4) → 400, training refused
@@ -54,7 +58,7 @@ be generated in their image — really fine-tuned, never simulated.
 - Done: status `trained`, "Generate" enabled
 
 ## Verification
-- Test files: `services/api/tests/test_subjects_api.py`, `test_subjects_store.py`
+- Test files: `services/api/tests/test_subjects_api.py`, `test_subjects_store.py`, `test_training.py` (step-budget scaling/clamping/override)
 - Real-loop check: a tiny SD test pipeline (`hf-internal-testing/tiny-stable-diffusion-pipe`),
   2 selfies, 2 steps — confirms a real `.safetensors` lands under `subjects/{id}/model/`
 - Quick verify: `pnpm test:api`

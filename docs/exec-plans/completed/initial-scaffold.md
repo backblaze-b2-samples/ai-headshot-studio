@@ -89,7 +89,7 @@ scaffolding; add the headshot domain.
 - `service/`: `subjects.py` (create / list / get / **purge**), `captioning.py`, `training.py` (BackgroundTasks job, manifest progress), `generation.py` (BackgroundTasks job across selected style packs), `styles.py` (style-pack registry), `stats.py` (rewritten aggregations).
 - `runtime/`: `subjects.py` (create, list, get, DELETE purge), `generation.py` (start generate + progress). Keep `files.py`, `upload.py`, `health.py`, `metrics.py`. Training start/progress folded into `subjects.py` or a small `training.py` router.
 - `types/`: `subject.py`, `style.py`, `headshot.py`, rewritten `stats.py`. Keep `files.py`, `formatting.py`; `upload.py` stays.
-- `config/settings.py` — add `trainer_provider` (default `local`), `generator_provider` (default `local`), `base_model` (default `runwayml/stable-diffusion-v1-5`), `train_steps`, `headshots_per_style` (default 6), optional `anthropic_api_key`, `replicate_api_token`, style-pack defaults.
+- `config/settings.py` — add `trainer_provider` (default `local`), `generator_provider` (default `local`), `base_model` (default `stable-diffusion-v1-5/stable-diffusion-v1-5`), `train_steps`, `headshots_per_style` (default 6), optional `anthropic_api_key`, `replicate_api_token`, style-pack defaults.
 
 **Async pattern (reused, proven):** FastAPI `BackgroundTasks` + manifest polling. `subject.json` on B2 is the single source of truth for status/progress; the frontend polls a `/progress` endpoint. No DB, no in-memory job store.
 

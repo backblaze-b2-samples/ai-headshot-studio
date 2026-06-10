@@ -10,13 +10,23 @@ User journeys inside the application.
 - **Step 2 — Upload selfies.** Drop 4–20 selfies; each uploads to the subject
   prefix (`POST /subjects/{id}/selfies`) with per-file progress
 - **Step 3 — Caption & train.** "Auto-caption" runs Claude vision (or a
-  templated fallback); "Train likeness" starts a real LoRA fine-tune as a
-  background job. A progress bar polls `GET /subjects/{id}/progress` @1.5s
+  templated fallback); each selfie is then shown with its caption. "Train
+  likeness" starts a real LoRA fine-tune as a background job. The page polls the
+  subject manifest @1.5s, so the status badge and progress bar update live and
+  "Generate" unblocks automatically when status reaches `trained`
 - **Step 4 — Pick style packs & generate.** Select packs (Corporate, LinkedIn,
   Creative, Outdoor, Editorial B&W) → "Generate" renders real headshots per
   pack as a background job, with a progress bar
 - On completion: "View gallery" opens the subject detail
 - See: [Subject Training](features/subject-training.md), [Headshot Generation](features/headshot-generation.md)
+
+## Generate more for an existing subject
+
+- From a trained subject's detail page (`/gallery/[subjectId]`), click
+  **Generate more** → opens `/studio?subjectId=…` with that subject loaded
+  straight into step 4 (no need to redefine the subject)
+- Pick additional/other style packs and generate; new images continue numbering
+  alongside the existing ones
 
 ## Browse the gallery
 

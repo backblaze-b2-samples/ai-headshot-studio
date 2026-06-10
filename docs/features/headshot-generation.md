@@ -23,7 +23,7 @@ across the selected style packs — every image is a genuine model output.
 ## Inputs
 - `style_slugs: string[]` (UI)
 - `HEADSHOTS_PER_STYLE` (default 6 → ~30 across the five packs; raise toward "hundreds")
-- `GENERATOR_PROVIDER` (`local` default | `replicate`), `GENERATE_STEPS`, `GENERATE_GUIDANCE`
+- `GENERATOR_PROVIDER` (`local` default | `replicate`), `GENERATE_STEPS` (default 30), `GENERATE_GUIDANCE` (default 7.0), `GENERATE_LORA_SCALE` (default 0.8 — how strongly the likeness LoRA is applied at inference)
 
 ## Outputs
 - Real PNGs at `subjects/{id}/headshots/{style_slug}/{NN}.png`
@@ -32,9 +32,11 @@ across the selected style packs — every image is a genuine model output.
 ## Flow
 - `POST /generate` validates the subject is `trained`/`complete` and has a `lora_key`
 - Status flips to `generating`; the BackgroundTask runs
+- The pipeline uses the DPM++ 2M Karras sampler and applies the LoRA at
+  `GENERATE_LORA_SCALE` for sharper, more faithful faces
 - For each style pack: build the prompt, render `HEADSHOTS_PER_STYLE` images from
   the loaded LoRA, write each PNG to B2, append to the manifest, bump progress
-- Status flips to `complete`; the UI polls `/progress` throughout
+- Status flips to `complete`; the UI tracks progress live off the subject manifest
 
 ## Edge Cases
 - Subject not trained / no `lora_key` → 409

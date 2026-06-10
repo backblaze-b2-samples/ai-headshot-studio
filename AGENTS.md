@@ -67,7 +67,9 @@ faking a real model output, stop and raise it instead.
 
 **Async jobs**: training and generation run via FastAPI `BackgroundTasks`.
 The subject manifest (`subjects/{id}/subject.json`) on B2 is the single source
-of truth for status/progress; the frontend polls `GET /subjects/{id}/progress`.
+of truth for status/progress; the frontend keeps it live by polling the subject
+(`useSubject` self-throttles to 1.5s while a job runs). A lightweight
+`GET /subjects/{id}/progress` is also available for status-only polling.
 No DB, no in-memory job store.
 
 **Frontend**: shadcn/ui components in `src/components/ui/` are generated — never modify them.
