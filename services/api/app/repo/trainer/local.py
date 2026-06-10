@@ -46,6 +46,7 @@ class LocalTrainer(Trainer):
             StableDiffusionPipeline,
             UNet2DConditionModel,
         )
+        from diffusers.optimization import get_scheduler
         from diffusers.utils import convert_state_dict_to_diffusers
         from peft import LoraConfig
         from peft.utils import get_peft_model_state_dict
@@ -88,7 +89,15 @@ class LocalTrainer(Trainer):
             )
         )
         lora_params = [p for p in unet.parameters() if p.requires_grad]
-        optimizer = torch.optim.AdamW(lora_params, lr=req.learning_rate)
+        optimizer = torch.optim.AdamW(lora_params, lr=req.learning_rate, weight_decay=1e-2)
+        # Cosine decay with a short warmup converges to a cleaner likeness than
+        # a flat LR; warmup ~5% of the run guards against early instability.
+        lr_scheduler = get_scheduler(
+            "cosine",
+            optimizer=optimizer,
+            num_warmup_steps=max(1, int(req.steps * 0.05)),
+            num_training_steps=req.steps,
+        )
 
         # Pre-encode the captioned selfies into latents + text embeddings.
         examples = self._prepare_examples(
@@ -116,6 +125,7 @@ class LocalTrainer(Trainer):
             loss = torch.nn.functional.mse_loss(pred.float(), target.float())
             loss.backward()
             optimizer.step()
+            lr_scheduler.step()
             optimizer.zero_grad()
             on_progress(step + 1, req.steps)
 
@@ -124,6 +134,15 @@ class LocalTrainer(Trainer):
             convert_state_dict_to_diffusers, req.subject_id,
         )
         return TrainResult(lora_key=key, steps_done=req.steps)
+
+    @staticmethod
+    def _center_square(img):
+        """Crop the largest centered square from an image (preserves aspect)."""
+        w, h = img.size
+        side = min(w, h)
+        left = (w - side) // 2
+        top = (h - side) // 2
+        return img.crop((left, top, left + side, top + side))
 
     def _prepare_examples(self, req, device, Image, tokenizer, text_encoder, vae, torch):
         examples = []
@@ -134,7 +153,12 @@ class LocalTrainer(Trainer):
                 except Exception:
                     logger.warning("Skipping undecodable selfie in subject=%s", req.subject_id)
                     continue
-                img = img.resize((req.resolution, req.resolution))
+                # Center-crop to a square before resizing. A plain resize to a
+                # square would squash non-square selfies and distort the face,
+                # directly hurting likeness; cropping preserves proportions.
+                img = self._center_square(img).resize(
+                    (req.resolution, req.resolution), Image.LANCZOS
+                )
                 arr = torch.tensor(
                     list(img.tobytes()), dtype=torch.float32
                 ).reshape(req.resolution, req.resolution, 3)

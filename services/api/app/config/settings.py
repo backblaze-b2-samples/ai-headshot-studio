@@ -40,7 +40,7 @@ class Settings(BaseSettings):
 
     # Base diffusion model for the local engine. The default is SD-1.5; the
     # verification harness overrides this with a tiny test pipeline.
-    base_model: str = "runwayml/stable-diffusion-v1-5"
+    base_model: str = "stable-diffusion-v1-5/stable-diffusion-v1-5"
     # Replicate hosted-model slugs (FLUX LoRA train + generate).
     replicate_train_model: str = (
         "ostris/flux-dev-lora-trainer:"
@@ -48,17 +48,30 @@ class Settings(BaseSettings):
     )
     replicate_generate_model: str = "black-forest-labs/flux-dev-lora"
 
-    # Training hyperparameters (kept small so the default local run is feasible
-    # on CPU/MPS; crank up for quality on a GPU).
-    train_steps: int = 600
+    # Training hyperparameters. For likeness quality the step budget scales
+    # with the number of selfies (~train_steps_per_image each), clamped to
+    # [train_steps_min, train_steps_max] so a tiny set isn't under-trained and
+    # a big set doesn't run forever on CPU/MPS. Set train_steps > 0 to pin an
+    # explicit budget (e.g. TRAIN_STEPS=40 for a fast smoke test); 0 = auto.
+    train_steps: int = 0
+    train_steps_per_image: int = 100
+    train_steps_min: int = 600
+    train_steps_max: int = 1200
     train_resolution: int = 512
-    train_lora_rank: int = 8
+    # LoRA rank 16 (alpha tied to rank) captures a specific face far better
+    # than 8; bump toward 32 on a GPU for even stronger likeness.
+    train_lora_rank: int = 16
     train_learning_rate: float = 1e-4
     # How many headshots to render per selected style pack. Default 6 -> ~30
     # across the five built-in packs; raise toward "hundreds".
     headshots_per_style: int = 6
-    generate_steps: int = 25
-    generate_guidance: float = 7.5
+    generate_steps: int = 30
+    # Lower CFG (≈7) avoids the waxy, over-saturated skin that 7.5+ tends to
+    # produce on portraits.
+    generate_guidance: float = 7.0
+    # How strongly the likeness LoRA is applied at inference. 1.0 over-imposes
+    # the LoRA (rigid, over-fit look); ~0.8 balances likeness vs prompt.
+    generate_lora_scale: float = 0.8
     # Minimum / maximum selfies accepted for a subject.
     min_selfies: int = 4
     max_selfies: int = 30

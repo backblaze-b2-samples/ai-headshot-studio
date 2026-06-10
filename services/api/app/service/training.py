@@ -19,6 +19,20 @@ from app.types.subject import Subject, SubjectStatus
 logger = logging.getLogger(__name__)
 
 
+def effective_train_steps(n_selfies: int) -> int:
+    """Resolve the training step budget.
+
+    A pinned ``train_steps > 0`` always wins (handy for fast smoke tests).
+    Otherwise scale with the selfie count (~``train_steps_per_image`` each)
+    and clamp to ``[train_steps_min, train_steps_max]`` so small sets aren't
+    under-trained and large ones don't run forever on CPU/MPS.
+    """
+    if settings.train_steps > 0:
+        return settings.train_steps
+    target = settings.train_steps_per_image * max(n_selfies, 1)
+    return max(settings.train_steps_min, min(target, settings.train_steps_max))
+
+
 def start_training(subject_id: str) -> Subject:
     """Validate and flip the subject into TRAINING. Caller schedules run_training."""
     subject = get_subject(subject_id)
@@ -30,7 +44,7 @@ def start_training(subject_id: str) -> Subject:
     if subject.status in (SubjectStatus.TRAINING, SubjectStatus.GENERATING):
         raise SubjectError("A job is already running for this subject", 409)
     subject.status = SubjectStatus.TRAINING
-    subject.train_steps_total = settings.train_steps
+    subject.train_steps_total = effective_train_steps(len(subject.selfies))
     subject.train_steps_done = 0
     subject.error = None
     save_manifest(subject)
@@ -73,7 +87,7 @@ def run_training(subject_id: str) -> None:
                 subject_id=subject.id,
                 trigger_token=subject.trigger_token,
                 samples=samples,
-                steps=settings.train_steps,
+                steps=effective_train_steps(len(samples)),
                 resolution=settings.train_resolution,
                 lora_rank=settings.train_lora_rank,
                 learning_rate=settings.train_learning_rate,
