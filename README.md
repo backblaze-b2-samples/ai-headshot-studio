@@ -67,7 +67,7 @@ and [docs/features/privacy-lifecycle.md](docs/features/privacy-lifecycle.md).
 
 ## Quick Start
 
-You need: Node.js >= 20, pnpm >= 9, Python >= 3.11, and a free **[Backblaze B2 account](https://www.backblaze.com/sign-up/ai-cloud-storage?utm_source=github&utm_medium=referral&utm_campaign=ai_artifacts&utm_content=b2ai-ai-headshot-studio)**.
+You need: Node.js >= 20.9.0, pnpm >= 9, Python >= 3.11, and a free **[Backblaze B2 account](https://www.backblaze.com/sign-up/ai-cloud-storage?utm_source=github&utm_medium=referral&utm_campaign=ai_artifacts&utm_content=b2ai-ai-headshot-studio)**.
 
 **1. Install frontend dependencies**
 
